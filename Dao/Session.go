@@ -133,4 +133,22 @@ func (s *session) Select(slice interface{})error{
 	}
 	return rows.Close()
 }
+func (s *session) Update( m map[string]interface{})error{
+	s.clause.Set(Dialect.UPDATE,s.Table.Name,m)
+	sql, vars := s.clause.Build(Dialect.UPDATE, Dialect.WHERE)
+	s.SetSql(sql,vars...)
+	_, err := s.Exec()
+	return err
+}
+func (s *session) Delete() error {
+	s.clause.Set(Dialect.DELETE,s.Table.Name)
+	sql, vars := s.clause.Build(Dialect.DELETE, Dialect.WHERE)
+	s.SetSql(sql,vars...)
+	_, err := s.Exec()
+	return err
+}
+func (s *session) Where(str string)*session{
+	s.clause.Set(Dialect.WHERE,str)
+	return s
+}
 

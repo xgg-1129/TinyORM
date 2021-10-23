@@ -19,3 +19,14 @@ func TestSelect(t *testing.T) {
 		fmt.Printf("%+v\n",item)
 	}
 }
+func TestUpdate(t *testing.T) {
+	engine, _:= NewEngine("sqlite3","test.db")
+	defer engine.Close()
+	s:=engine.NewSession()
+	s.SetSchema(&User{})
+	if err := s.Where("Name='xgg'").Delete();err!=nil{
+		mylog.Error(err)
+		t.Fail()
+	}
+
+}

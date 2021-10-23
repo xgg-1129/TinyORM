@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-//dialect适配器模型,主要的作用就是生成每个数据库标准的sql语句，然后赋予session去执行
+//dialect策略模型,主要的作用就是生成每个数据库标准的sql语句，然后赋予session去执行
 
 
 var	dialectMap = map[string]Dialect{}
