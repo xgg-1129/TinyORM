@@ -31,4 +31,15 @@ func TestSession(t *testing.T) {
 	if _,err := s.HasTable();err!=nil{
 		mylog.Error(err)
 	}
+	u1:=User{
+		Name: "zzb",
+		Age:  21,
+	}
+	u2:=User{
+		Name: "zx",
+		Age:  11,
+	}
+	if err := s.Insert(u1,&u2);err!=nil{
+		t.Fatal(err)
+	}
 }

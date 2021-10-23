@@ -5,6 +5,7 @@ import (
 	mylog "TinyORM/Log"
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
 )
 //和数据库进行交互
@@ -17,7 +18,7 @@ type session struct {
 
 	SqlGenerator Dialect.Dialect
 	Table *Dialect.Schema
-
+	clause   Dialect.Clause
 }
 
 func NewSession(db *sql.DB)*session{
@@ -25,8 +26,9 @@ func NewSession(db *sql.DB)*session{
 		db:db,
 	}
 }
+
 func (s *session) Exec()(res sql.Result,err error){
-	defer s.sql.Reset()
+	defer s.Clear()
 	mylog.Info(s.sql.String(), s.placeHolder)
 	if res , err = s.db.Exec(s.sql.String(),s.placeHolder...);err!=nil{
 		mylog.Error(err)
@@ -34,13 +36,13 @@ func (s *session) Exec()(res sql.Result,err error){
 	return
 }
 func (s *session) QueryRow() (row *sql.Row) {
-	defer s.sql.Reset()
+	defer s.Clear()
 	mylog.Info(s.sql.String(), s.placeHolder)
 	row = s.db.QueryRow(s.sql.String(), s.placeHolder...)
 	return
 }
 func (s *session) QueryRows() (rows *sql.Rows, err error) {
-	defer s.sql.Reset()
+	defer s.Clear()
 	mylog.Info(s.sql.String(), s.placeHolder)
 	if rows,err = s.db.Query(s.sql.String(),s.placeHolder...);err!=nil{
 		mylog.Error(err)
@@ -80,10 +82,55 @@ func (s *session) HasTable() (bool,error) {
 func (s *session) RefTable()*Dialect.Schema {
 	return s.Table
 }
-func (s *session) Insert(objects... interface{}){
-
+func (s *session) Clear() {
+	s.sql.Reset()
+	s.placeHolder = nil
+	s.clause = Dialect.Clause{}
 }
-func (s *session) insert(object interface{}) {
+func (s *session) Insert(objects ...interface{}) error{
+	for _,object :=range objects{
+		if err := s.insert(object);err!=nil{
+			return err
+		}
+	}
+	return nil
+}
+func (s *session) insert(object interface{})error{
+	recordValues:=s.Table.RecordValues(object)
+	s.clause.Set(Dialect.INSERT, s.Table.Name, s.Table.FieldsName)
+	s.clause.Set(Dialect.VALUES, recordValues)
+	sql, vars := s.clause.Build(Dialect.INSERT, Dialect.VALUES)
+	s.SetSql(sql,vars...)
+	_, err := s.Exec()
+	return err
+}
+func (s *session) Select(slice interface{})error{
+	//
+	destSlice:=reflect.Indirect(reflect.ValueOf(slice))
+	ElemType:=destSlice.Type().Elem()
 
+
+
+	s.clause.Set(Dialect.SELECT, s.Table.Name, s.Table.FieldsName)
+	sql, vars := s.clause.Build(Dialect.SELECT, Dialect.WHERE, Dialect.ORDERBY, Dialect.LIMIT)
+	s.SetSql(sql,vars...)
+	rows, err := s.QueryRows()
+	if err!=nil{
+		return err
+	}
+	for rows.Next(){
+		dest:=reflect.New(ElemType).Elem()
+		//how to 构造dest。。。。
+		var values []interface{}
+		for _, name := range s.Table.FieldsName {
+
+			values = append(values, dest.FieldByName(name).Addr().Interface())
+		}
+		if err = rows.Scan(values...); err != nil {
+			return err
+		}
+		destSlice.Set(reflect.Append(destSlice, dest))
+	}
+	return rows.Close()
 }
 

@@ -39,3 +39,11 @@ func ParseObect(object interface{},d Dialect)*Schema {
 	}
 	return res
 }
+func (s *Schema) RecordValues(object interface{}) []interface{}{
+	value:=reflect.Indirect(reflect.ValueOf(object))
+	var res []interface{}
+	for _,fd := range s.Fields{
+		res=append(res,value.FieldByName(fd.Name).Interface())
+	}
+	return res
+}
