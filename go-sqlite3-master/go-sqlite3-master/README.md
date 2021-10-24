@@ -315,7 +315,7 @@ For example the TDM-GCC Toolchain can be found [here](https://sourceforge.net/pr
 
 ## Errors
 
-- Compile error: `can not be used when making a shared object; recompile with -fPIC`
+- Compile error: `can not be used when making a shared Object; recompile with -fPIC`
 
     When receiving a compile time error referencing recompile with `-FPIC` then you
     are probably using a hardend system.

@@ -96,6 +96,7 @@ func (s *session) Insert(objects ...interface{}) error{
 	return nil
 }
 func (s *session) insert(object interface{})error{
+	s.CallMethod(BeforeInsert,object)
 	recordValues:=s.Table.RecordValues(object)
 	s.clause.Set(Dialect.INSERT, s.Table.Name, s.Table.FieldsName)
 	s.clause.Set(Dialect.VALUES, recordValues)
@@ -106,10 +107,9 @@ func (s *session) insert(object interface{})error{
 }
 func (s *session) Select(slice interface{})error{
 	//
+	s.CallMethod(BeforeQuery,nil)
 	destSlice:=reflect.Indirect(reflect.ValueOf(slice))
 	ElemType:=destSlice.Type().Elem()
-
-
 
 	s.clause.Set(Dialect.SELECT, s.Table.Name, s.Table.FieldsName)
 	sql, vars := s.clause.Build(Dialect.SELECT, Dialect.WHERE, Dialect.ORDERBY, Dialect.LIMIT)
@@ -123,12 +123,12 @@ func (s *session) Select(slice interface{})error{
 		//how to 构造dest。。。。
 		var values []interface{}
 		for _, name := range s.Table.FieldsName {
-
 			values = append(values, dest.FieldByName(name).Addr().Interface())
 		}
 		if err = rows.Scan(values...); err != nil {
 			return err
 		}
+		s.CallMethod(AfterQuery,dest.Addr().Interface())
 		destSlice.Set(reflect.Append(destSlice, dest))
 	}
 	return rows.Close()

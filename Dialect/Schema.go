@@ -8,9 +8,7 @@ type field struct {
 	Tag     string
 }
 type Schema struct {
-	object interface{}
-
-
+	Object     interface{}
 	Name       string
 	Fields     []*field
 	FieldsName []string
@@ -20,7 +18,7 @@ type Schema struct {
 func ParseObect(object interface{},d Dialect)*Schema {
 	modelType:=reflect.Indirect(reflect.ValueOf(object)).Type()
 	res:=new(Schema)
-	res.object=object
+	res.Object =object
 	res.Name=modelType.Name()
 	res.FieldsMap =make(map[string]*field)
 	for i:=0;i<modelType.NumField();i++{
