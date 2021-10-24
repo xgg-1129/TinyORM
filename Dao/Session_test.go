@@ -7,7 +7,7 @@ import (
 )
 
 func TestSelect(t *testing.T) {
-	engine, _:= NewEngine("sqlite3","test.db")
+	engine, _:= NewEngine("sqlite3","test.DB")
 	defer engine.Close()
 	s:=engine.NewSession()
 	s.SetSchema(&User{})
@@ -20,7 +20,7 @@ func TestSelect(t *testing.T) {
 	}
 }
 func TestUpdate(t *testing.T) {
-	engine, _:= NewEngine("sqlite3","test.db")
+	engine, _:= NewEngine("sqlite3","test.DB")
 	defer engine.Close()
 	s:=engine.NewSession()
 	s.SetSchema(&User{})
@@ -49,7 +49,7 @@ func (account *Account) AfterQuery(s *session) error {
 }
 
 func TestSession_CallMethod(t *testing.T) {
-	engine, _:= NewEngine("sqlite3","test.db")
+	engine, _:= NewEngine("sqlite3","test.DB")
 	defer engine.Close()
 	s:=engine.NewSession()
 	s.SetSchema(&Account{})

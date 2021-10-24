@@ -1,4 +1,4 @@
-*.db
+*.DB
 *.exe
 *.dll
 *.o

@@ -1,9 +1,9 @@
 package Dao
 
 import (
+	"TinyORM/Dialect"
 	mylog "TinyORM/Log"
 	"database/sql"
-	"TinyORM/Dialect"
 	"errors"
 )
 
@@ -47,4 +47,25 @@ func (e *Engine) NewSession()*session{
 	s.SqlGenerator=e.dialect
 	mylog.Info("Create New Session")
 	return s
+}
+
+type TxFunc func(*session) (interface{}, error)
+
+func (engine *Engine) Transaction(f TxFunc) (result interface{}, err error) {
+	s := engine.NewSession()
+	if err = s.Begin();err!=nil{
+		return nil,err
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			_ = s.Rollback()
+			panic(p) // re-throw panic after Rollback
+		} else if err != nil {
+			_ = s.Rollback() // err is non-nil; don't change it
+		} else {
+			err = s.Commit() // err is nil; if Commit returns error update err
+		}
+	}()
+	_ , err = f(s)
+	return
 }

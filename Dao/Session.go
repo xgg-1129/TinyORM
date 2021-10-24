@@ -13,6 +13,9 @@ type session struct {
 	db *sql.DB
 	sql strings.Builder
 
+	//执行事务引擎
+	tx *sql.Tx
+
 	//用来替换sql语句中的占位符
 	placeHolder []interface{}
 
@@ -26,11 +29,21 @@ func NewSession(db *sql.DB)*session{
 		db:db,
 	}
 }
-
+type CommonDB interface {
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
+func (s *session) DB() CommonDB {
+	if s.tx != nil {
+		return s.tx
+	}
+	return s.db
+}
 func (s *session) Exec()(res sql.Result,err error){
 	defer s.Clear()
 	mylog.Info(s.sql.String(), s.placeHolder)
-	if res , err = s.db.Exec(s.sql.String(),s.placeHolder...);err!=nil{
+	if res , err = s.DB().Exec(s.sql.String(),s.placeHolder...);err!=nil{
 		mylog.Error(err)
 	}
 	return
@@ -38,13 +51,13 @@ func (s *session) Exec()(res sql.Result,err error){
 func (s *session) QueryRow() (row *sql.Row) {
 	defer s.Clear()
 	mylog.Info(s.sql.String(), s.placeHolder)
-	row = s.db.QueryRow(s.sql.String(), s.placeHolder...)
+	row = s.DB().QueryRow(s.sql.String(), s.placeHolder...)
 	return
 }
 func (s *session) QueryRows() (rows *sql.Rows, err error) {
 	defer s.Clear()
 	mylog.Info(s.sql.String(), s.placeHolder)
-	if rows,err = s.db.Query(s.sql.String(),s.placeHolder...);err!=nil{
+	if rows,err = s.DB().Query(s.sql.String(),s.placeHolder...);err!=nil{
 		mylog.Error(err)
 	}
 	return
@@ -150,5 +163,30 @@ func (s *session) Delete() error {
 func (s *session) Where(str string)*session{
 	s.clause.Set(Dialect.WHERE,str)
 	return s
+}
+
+func (s *session) Begin() (err error) {
+	mylog.Info("transaction begin")
+	if s.tx, err = s.db.Begin(); err != nil {
+		mylog.Error(err)
+		return
+	}
+	return
+}
+
+func (s *session) Commit() (err error) {
+	mylog.Info("transaction commit")
+	if err = s.tx.Commit(); err != nil {
+		mylog.Error(err)
+	}
+	return
+}
+
+func (s *session) Rollback() (err error) {
+	mylog.Info("transaction rollback")
+	if err = s.tx.Rollback(); err != nil {
+		mylog.Error(err)
+	}
+	return
 }
 

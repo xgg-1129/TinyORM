@@ -131,7 +131,7 @@ Boolean values can be one of:
 ## DSN Examples
 
 ```
-file:test.db?cache=shared&mode=memory
+file:test.DB?cache=shared&mode=memory
 ```
 
 # Features
@@ -487,7 +487,7 @@ For an example see [dinedal/go-sqlite3-extension-functions](https://github.com/d
 
 - Want to get time.Time with current locale
 
-    Use `_loc=auto` in SQLite3 filename schema like `file:foo.db?_loc=auto`.
+    Use `_loc=auto` in SQLite3 filename schema like `file:foo.DB?_loc=auto`.
 
 - Can I use this in multiple routines concurrently?
 
@@ -534,13 +534,13 @@ For an example see [dinedal/go-sqlite3-extension-functions](https://github.com/d
 
     Example:
     ```go
-    db, err := sql.Open("sqlite3", "file:locked.sqlite?cache=shared")
+    DB, err := sql.Open("sqlite3", "file:locked.sqlite?cache=shared")
     ```
 
     Second please set the database connections of the SQL package to 1.
     
     ```go
-    db.SetMaxOpenConns(1)
+    DB.SetMaxOpenConns(1)
     ```
 
     More information see [#209](https://github.com/mattn/go-sqlite3/issues/209)
